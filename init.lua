@@ -17,7 +17,8 @@ Plug("R-nvim/R.nvim")
 Plug("R-nvim/cmp-r")
 
 -- common lisp
-Plug('vlime/vlime', {rtp = 'vim/'})
+Plug("monkoose/parsley") -- nvlime dependency
+Plug("monkoose/nvlime")
 
 -- slime-like utility for vim
 Plug("jpalardy/vim-slime")
