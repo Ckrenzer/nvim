@@ -138,7 +138,7 @@ vim.api.nvim_create_autocmd({ "CursorHold" }, {
   callback = function ()
     vim.diagnostic.open_float(nil, {
         focus = false,
-        severity = { min = vim.diagnostic.severity.WARN },
+        severity = { min = vim.diagnostic.severity.ERROR },
     })
   end
 })
