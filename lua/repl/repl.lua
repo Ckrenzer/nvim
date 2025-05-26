@@ -49,6 +49,25 @@ repl.open = function(opts)
     -- one repl is supported at a time... !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     vim.g.slime_python_ipython = string.match(opts.fargs[1], "ipython") ~= nil
 end
+
+-- pass the terminal info in as the argument.
+repl.view_bottom_of_repl = function(opts)
+    -- this function exits silently if no/invalid arguments
+    -- were passed. this facilitates its usage in contexts outside
+    -- of this module (i.e., if you were to use vim-slime to send
+    -- text to a terminal opened by R.nvim, this function could
+    -- fail if vim-slime does not pass in the terminal info,
+    -- which you currently have not done).
+    pcall(function(options)
+        -- hard coding to only support a the single repl in this module for now !!!!!!!!!!!!!
+        -- <<in other words, the arguments are currently ignored>>
+        terminal_info = repl.repl_info[1]
+        last_line = vim.api.nvim_buf_line_count(terminal_info.buffer)
+        vim.api.nvim_win_set_cursor(terminal_info.window, {last_line, 0})
+    end,
+    opts)
+end
+
 -- Send text to an open REPL
 repl.send_keys = function(opts)
     -- hard coding to only support a single repl for now !!!!!!!!!!!!!
@@ -56,28 +75,8 @@ repl.send_keys = function(opts)
     text = opts.args .. "\n"
     vim.api.nvim_chan_send(terminal_info.channel_id, text)
     -- move the cursor to the bottom
-    last_line = vim.api.nvim_buf_line_count(terminal_info.buffer)
-    vim.api.nvim_win_set_cursor(terminal_info.window, {last_line, 0})
+    repl.view_bottom_of_repl(terminal_info)
 end
-
-
-vim.api.nvim_create_user_command("REPLOpen",
-repl.open,
-{
-    nargs = "*",
-    desc = "Open a REPL in a new terminal window.",
-})
-vim.api.nvim_create_user_command("REPLSendKeys",
-repl.send_keys,
-{
-    nargs = "*",
-    desc = "Send text to an open REPL."
-})
-
-
--- set key bindings around commands
-vim.api.nvim_set_keymap("n", "<LocalLeader>jf", ":REPLOpen ", { noremap = true })
-vim.api.nvim_set_keymap("n", "<LocalLeader>:", ":REPLSendKeys ", { noremap = true })
 
 
 return repl
