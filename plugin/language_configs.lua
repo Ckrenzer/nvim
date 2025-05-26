@@ -12,6 +12,7 @@ require("nvim-treesitter.configs").setup({
         "r",
         "rnoweb",
         "vim",
+        "yaml",
     },
     -- Install parsers synchronously (only applied to `ensure_installed`)
     sync_install = false,
@@ -68,6 +69,13 @@ cmp.setup.cmdline(':',
         { name = 'cmdline' }
     })
 })
+cmp.setup.filetype({ 'lisp' }, {
+    sources = {
+        { name = 'nvlime' },
+    }
+})
+-- once the swank server starts up, this enables autocompletion a la nvim-cmp
+vim.g.nvlime_config = { cmp = { enabled = true } }
 
 -- when you need to get more LSPs set up, this link should help you
 -- https://www.andersevenrud.net/neovim.github.io/lsp/configurations/
@@ -84,9 +92,10 @@ local r = require("r")
 vim.g.rout_follow_colorscheme = true
 r.setup({
     R_args = { "--quiet", "--no-restore", "--no-save" },
-    external_term = false, -- this can be changed to open using tmux, among other choices
+    external_term = "", -- this can be changed to open using tmux, among other choices
     rconsole_width = 15, -- making this small enough to force the console to open in a vertical split
-    pipe_keymap = "<M-m>", -- probably won't use this, remapping b/c insert mode mappings are bothersome when localleader is <Space>
+    debug = false,
+    disable_cmds = { "RInsertAssign", "RInsertPipe" },
     hook = {
         on_filetype = function()
             vim.keymap.set("n", "<C-\\>", "<Plug>RDSendLine", { buffer = true })
