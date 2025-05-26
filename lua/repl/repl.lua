@@ -69,11 +69,16 @@ repl.view_bottom_of_repl = function(opts)
 end
 
 -- Send text to an open REPL
-repl.send_keys = function(opts)
+repl.send_keys = function(opts, wait_ms)
     -- hard coding to only support a single repl for now !!!!!!!!!!!!!
     terminal_info = repl.repl_info[1]
     text = opts.args .. "\n"
     vim.api.nvim_chan_send(terminal_info.channel_id, text)
+    -- pause for a set amount of time.
+    -- useful for handling with side effects produced by REPL
+    -- (Ex. call this function in a plugin, have a REPL produce
+    -- output, and then read the results into a split window).
+    vim.wait(wait_ms or 0)
     -- move the cursor to the bottom
     repl.view_bottom_of_repl(terminal_info)
 end
