@@ -19,8 +19,10 @@ Plug("R-nvim/cmp-r")
 -- common lisp
 Plug("monkoose/parsley") -- nvlime dependency
 Plug("monkoose/nvlime")
+-- this provides structural editing (for editing all those parens!)
+Plug("julienvincent/nvim-paredit") -- commonlisp treesitter parser required
 
--- slime-like utility for vim
+-- copy and paste utility
 Plug("jpalardy/vim-slime")
 
 -- nice and simple utility for closing buffers
