@@ -17,8 +17,7 @@ Plug("R-nvim/R.nvim")
 Plug("R-nvim/cmp-r")
 
 -- common lisp
-Plug("monkoose/parsley") -- nvlime dependency
-Plug("monkoose/nvlime")
+Plug('vlime/vlime', {rtp = 'vim/'})
 -- this provides structural editing (for editing all those parens!)
 Plug("julienvincent/nvim-paredit") -- commonlisp treesitter parser required
 
