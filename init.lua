@@ -128,18 +128,10 @@ vim.keymap.set("n", "<leader>vrn", function() vim.lsp.buf.rename() end, opts)
 vim.keymap.set("i", "<C-h>", function() vim.lsp.buf.signature_help() end, opts)
 
 
--- diagnostics settings
+-- diagnostic settings
 vim.diagnostic.config({
-virtual_text = false,
     underline = false,
-})
-vim.o.updatetime = 200
-vim.api.nvim_create_autocmd({ "CursorHold" }, {
-  group = vim.api.nvim_create_augroup("float_diagnostic_cursor", { clear = true }),
-  callback = function ()
-    vim.diagnostic.open_float(nil, {
-        focus = false,
-        severity = { min = vim.diagnostic.severity.ERROR },
-    })
-  end
+    virtual_text = false,
+    virtual_lines = false,
+    signs = true,
 })
