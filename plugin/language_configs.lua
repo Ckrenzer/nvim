@@ -1,30 +1,4 @@
-require("nvim-treesitter.configs").setup({
-    -- A list of parser names, or "all"
-    -- (the listed parsers should always be installed)
-    ensure_installed = {
-        "awk",
-        "c",
-        "commonlisp",
-        "julia",
-        "lua",
-        "markdown",
-        "python",
-        "r",
-        "rnoweb",
-        "vim",
-        "yaml",
-    },
-    -- Install parsers synchronously (only applied to `ensure_installed`)
-    sync_install = false,
-    -- Automatically install missing parsers when entering buffer
-    auto_install = true,
-    highlight = {
-        enable = true,
-        additional_vim_regex_highlighting = false,
-    },
-    lazy = false,
-})
-
+-- AUTOCOMPLETE CONFIGURATION
 local cmp = require('cmp')
 cmp.setup({
     sources = cmp.config.sources(
@@ -74,20 +48,81 @@ cmp.setup.filetype({ 'lisp' }, {
         { name = 'nvlime' },
     }
 })
--- once the swank server starts up, this enables autocompletion a la nvim-cmp
-vim.g.nvlime_config = { cmp = { enabled = true } }
 
--- when you need to get more LSPs set up, this link should help you
--- https://www.andersevenrud.net/neovim.github.io/lsp/configurations/
-local lsp = require("lspconfig")
-lsp.awk_ls.setup{}
-lsp.bashls.setup{}
-lsp.pyright.setup{}
-lsp.lua_ls.setup{}
-lsp.r_language_server.setup{}
-lsp.sqlls.setup{}
-lsp.vimls.setup{}
 
+-- LSP CONFIGURATION
+--
+--
+-- LISP
+-- load ciel upon starting a new session. mostly for the nicer documentation
+-- (this boots sbcl and loads the ciel core image instead of the ciel binary).
+vim.cmd[[
+    function! NvlimeBuildServerCommandFor_ciel(nvlime_loader, nvlime_eval)
+        return ["/usr/bin/sbcl",
+        \ "--core", "/home/ck/quicklisp/local-projects/CIEL/ciel-core",
+        \ "--load", "/home/ck/quicklisp/setup.lisp",
+        \ "--load", a:nvlime_loader,
+        \ "--eval", a:nvlime_eval]
+    endfunction
+]]
+vim.g.nvlime_config = {
+    leader = "<LocalLeader>",
+    implementation = "ciel",
+    autodoc = {
+        enabled = true,
+        max_level = 5,
+        max_lines = 50
+    },
+    floating_window = {
+        border = "single",
+        scroll_step = 3
+    },
+    cmp = { enabled = true },
+    arglist = { enabled = true }
+}
+
+-- Lua
+-- make the lua LSP work more nicely with neovim (config taken from help page)
+vim.lsp.config("lua_ls", {
+  on_init = function(client)
+    if client.workspace_folders then
+      local path = client.workspace_folders[1].name
+      if
+        path ~= vim.fn.stdpath('config')
+        and (vim.uv.fs_stat(path .. '/.luarc.json') or vim.uv.fs_stat(path .. '/.luarc.jsonc'))
+      then
+        return
+      end
+    end
+    client.config.settings.Lua = vim.tbl_deep_extend('force', client.config.settings.Lua, {
+      runtime = {
+        -- Tell the language server which version of Lua you're using (most
+        -- likely LuaJIT in the case of Neovim)
+        version = 'LuaJIT',
+        -- Tell the language server how to find Lua modules same way as Neovim
+        -- (see `:h lua-module-load`)
+        path = {
+          'lua/?.lua',
+          'lua/?/init.lua',
+        },
+      },
+      -- Make the server aware of Neovim runtime files
+      workspace = {
+        checkThirdParty = false,
+        library = {
+          vim.env.VIMRUNTIME,
+          -- For LSP Settings Type Annotations: https://github.com/neovim/nvim-lspconfig#lsp-settings-type-annotations
+          vim.api.nvim_get_runtime_file("lua/lspconfig", false)[1],
+        },
+      },
+    })
+  end,
+  settings = {
+    Lua = {},
+  },
+})
+
+-- R
 local r = require("r")
 vim.g.rout_follow_colorscheme = true
 r.setup({
@@ -111,3 +146,13 @@ r.setup({
         end
     }
 })
+
+-- when you need to get more LSPs set up, this link should help you
+-- https://www.andersevenrud.net/neovim.github.io/lsp/configurations/
+vim.lsp.enable("awk_ls")
+vim.lsp.enable("basedpyright")
+vim.lsp.enable("bashls")
+vim.lsp.enable("lua_ls")
+vim.lsp.enable("r_language_server")
+vim.lsp.enable("sqlls")
+vim.lsp.enable("vimls")

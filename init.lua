@@ -1,7 +1,5 @@
 local Plug = vim.fn["plug#"]
 vim.call("plug#begin")
--- syntax highlighting, goto definitions, and friends
-Plug("nvim-treesitter/nvim-treesitter")
 
 -- lsp helpers
 Plug("neovim/nvim-lspconfig")
@@ -13,15 +11,18 @@ Plug("hrsh7th/cmp-cmdline")
 Plug("saadparwaiz1/cmp_luasnip")
 Plug("L3MON4D3/LuaSnip")
 
+-- R
 Plug("R-nvim/R.nvim")
 Plug("R-nvim/cmp-r")
 
 -- common lisp
-Plug('vlime/vlime', {rtp = 'vim/'})
+Plug("monkoose/parsley") -- nvlime dependency
+Plug("LDT9510/nvlime") -- maintained fork of monkoose's original, more bug fixes
 -- this provides structural editing (for editing all those parens!)
 Plug("julienvincent/nvim-paredit") -- commonlisp treesitter parser required
 
 -- copy and paste utility
+-- (handy for repl-like languages without dedicated plugins)
 Plug("jpalardy/vim-slime")
 
 -- nice and simple utility for closing buffers
@@ -74,11 +75,11 @@ vim.o.relativenumber = true
 vim.o.list = true -- show spaces and tabs with hyphens
 -- after the 'expandtab' option is set, any new tab characters
 -- entered will be converted to spaces
--- (use Crtl+v+<Tab> to insert an actual tab character)
+-- (use <C-v><C-Tab> or <C-v><Tab> to insert an actual tab character)
 vim.o.expandtab = true
 vim.o.tabstop = 4 -- set the number of spaces to insert when pressing the tab key
 vim.o.softtabstop = 4 -- set the number of columns the cursor moves when pressing the tab or backspace <BS> key
-vim.o.shiftwidth = 4 -- set the number of spaces inserted for indentation (< and > in visual mode)
+vim.o.shiftwidth = 4 -- set the number of spaces inserted for indentation (< and > in normal or visual mode)
 
 
 vim.api.nvim_set_keymap("n", "+", ":vertical resize +10<CR>",
@@ -90,6 +91,14 @@ vim.api.nvim_set_keymap("n", "_", ":vertical resize -10<CR>",
                         {
                             noremap = true,
                             desc = "Decrease the size of a vertical pane by 10 columns."
+                        })
+-- decreasing the size would not go well and moving between panes is quite
+-- easy. you will not need a decrease option as is done in the vertical panes.
+-- trust me.
+vim.api.nvim_set_keymap("n", "<C-p>", ":resize +4<CR>",
+                        {
+                            noremap = true,
+                            desc = "Increase the size of a horizontal pane by 5 rows."
                         })
 vim.api.nvim_set_keymap("t", "<Esc>", "<C-\\><C-n>",
                         {
@@ -116,16 +125,13 @@ vim.api.nvim_set_keymap("n", "<C-l>", "<C-w>l",
                             noremap = true,
                             desc = "Move cursor right one window."
                         })
-vim.keymap.set("n", "gd", function() vim.lsp.buf.definition() end, opts)
+
+
+-- lsp settings
 vim.keymap.set("n", "K", function() vim.lsp.buf.hover() end, opts)
 vim.keymap.set("n", "<leader>vws", function() vim.lsp.buf.workspace_symbol() end, opts)
-vim.keymap.set("n", "<leader>vd", function() vim.diagnostic.open_float() end, opts)
-vim.keymap.set("n", "[d", function() vim.diagnostic.goto_next() end, opts)
-vim.keymap.set("n", "]d", function() vim.diagnostic.goto_prev() end, opts)
-vim.keymap.set("n", "<leader>vca", function() vim.lsp.buf.code_action() end, opts)
 vim.keymap.set("n", "<leader>vrr", function() vim.lsp.buf.references() end, opts)
 vim.keymap.set("n", "<leader>vrn", function() vim.lsp.buf.rename() end, opts)
-vim.keymap.set("i", "<C-h>", function() vim.lsp.buf.signature_help() end, opts)
 
 
 -- diagnostic settings
@@ -135,3 +141,5 @@ vim.diagnostic.config({
     virtual_lines = false,
     signs = true,
 })
+vim.keymap.set("n", "[d", function() vim.diagnostic.jump({count=1, float=true}) end, opts)
+vim.keymap.set("n", "]d", function() vim.diagnostic.jump({count=-1, float=true}) end, opts)
