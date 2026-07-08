@@ -1,5 +1,6 @@
 # you'll have to ensure that the language servers
 # are installed for the LSPs to work.
+sudo pacman -S tree-sitter-cli
 #
 # see the neovim/nvim-lspconfig repo for the full supported list:
 # https://github.com/neovim/nvim-lspconfig/tree/master/lsp
