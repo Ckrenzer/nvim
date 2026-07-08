@@ -51,9 +51,37 @@ cmp.setup.filetype({ 'lisp' }, {
 
 
 -- LSP CONFIGURATION
---
---
+-- many of the configs were taken from nvim-lspconfig's settings:
+-- https://github.com/neovim/nvim-lspconfig/tree/master/lsp
+
+-- AWK
+vim.lsp.config("awk_ls", {
+    cmd = { "awk-language-server" },
+    filetypes = { "awk" },
+})
+
+-- BASH
+vim.lsp.config("bashls", {
+    cmd = { 'bash-language-server', 'start' },
+    ---@type lspconfig.settings.bashls
+    settings = {
+        bashIde = {
+            -- Glob pattern for finding and parsing shell script files in the workspace.
+            -- Used by the background analysis features across files.
+            --
+            -- Prevent recursive scanning which will cause issues when opening a file
+            -- directly in the home directory (e.g. ~/foo.sh).
+            --
+            -- Default upstream pattern is "**/*@(.sh|.inc|.bash|.command)".
+            globPattern = vim.env.GLOB_PATTERN or '*@(.sh|.inc|.bash|.command)',
+        },
+    },
+    filetypes = { 'bash', 'sh' },
+    root_markers = { '.git' },
+})
+
 -- LISP
+-- lisp doesn't use an LSP, but this is a natural fit for the nvlime setup.
 -- load ciel upon starting a new session. mostly for the nicer documentation
 -- (this boots sbcl and loads the ciel core image instead of the ciel binary).
 vim.cmd[[
@@ -122,7 +150,79 @@ vim.lsp.config("lua_ls", {
   },
 })
 
+-- Python
+vim.lsp.config("basedpyright", {
+    cmd = { 'basedpyright-langserver', '--stdio' },
+    filetypes = { 'python' },
+    root_markers = {
+        'pyrightconfig.json',
+        'pyproject.toml',
+        'setup.py',
+        'setup.cfg',
+        'requirements.txt',
+        'Pipfile',
+        '.git',
+    },
+    ---@type lspconfig.settings.basedpyright
+    settings = {
+        basedpyright = {
+            analysis = {
+                autoSearchPaths = true,
+                diagnosticMode = 'openFilesOnly',
+                -- https://docs.basedpyright.com/latest/configuration/language-server-settings/
+                -- Explicitly setting `basedpyright.analysis.useLibraryCodeForTypes` is **discouraged** by the official docs.
+                -- Because it will override per-project configurations like `pyproject.toml`.
+                -- If left unset, its default value is `true`, and it can be correctly overridden by project config files.
+            },
+        },
+    },
+    on_attach = function(client, bufnr)
+        vim.api.nvim_buf_create_user_command(bufnr,
+                                             'LspPyrightOrganizeImports',
+                                             function()
+                                                 local params = {
+                                                     command = 'basedpyright.organizeimports',
+                                                     arguments = { vim.uri_from_bufnr(bufnr) },
+                                                 }
+                                                 -- Using client.request() directly because "basedpyright.organizeimports" is private
+                                                 -- (not advertised via capabilities), which client:exec_cmd() refuses to call.
+                                                 -- https://github.com/neovim/neovim/blob/c333d64663d3b6e0dd9aa440e433d346af4a3d81/runtime/lua/vim/lsp/client.lua#L1024-L1030
+                                                 ---@diagnostic disable-next-line: param-type-mismatch
+                                                 client.request('workspace/executeCommand', params, nil, bufnr)
+                                             end,
+                                             {
+                                                 desc = 'Organize Imports',
+                                             })
+        vim.api.nvim_buf_create_user_command(bufnr,
+                                             'LspPyrightSetPythonPath',
+                                             -- the 'set_python_path' function
+                                              function(command)
+                                                  local path = command.args
+                                                  local clients = vim.lsp.get_clients {
+                                                      bufnr = vim.api.nvim_get_current_buf(),
+                                                      name = 'basedpyright',
+                                                  }
+                                                  for _, client in ipairs(clients) do
+                                                      if client.settings then
+                                                          ---@diagnostic disable-next-line: param-type-mismatch
+                                                          client.settings.python = vim.tbl_deep_extend('force', client.settings.python or {}, { pythonPath = path })
+                                                      else
+                                                          client.config.settings = vim.tbl_deep_extend('force', client.config.settings, { python = { pythonPath = path } })
+                                                      end
+                                                      client:notify('workspace/didChangeConfiguration', { settings = nil })
+                                                  end
+                                              end,
+                                             {
+                                                 desc = 'Reconfigure basedpyright with the provided python path',
+                                                 nargs = 1,
+                                                 complete = 'file',
+                                             })
+    end,
+})
+
 -- R
+-- R-nvim plugins handle R's LSP already, so it does not go use the same
+-- configuration as LSPs of other languages.
 local r = require("r")
 vim.g.rout_follow_colorscheme = true
 r.setup({
@@ -147,12 +247,39 @@ r.setup({
     }
 })
 
--- when you need to get more LSPs set up, this link should help you
--- https://www.andersevenrud.net/neovim.github.io/lsp/configurations/
+-- SQL
+vim.lsp.config("sqls", {
+    cmd = { 'sqls' },
+    filetypes = { 'sql', 'mysql' },
+    root_markers = { 'config.yml' },
+    settings = {},
+})
+
+-- VimScript
+vim.lsp.config("vimls", {
+  cmd = { 'vim-language-server', '--stdio' },
+  filetypes = { 'vim' },
+  root_markers = { '.git' },
+  init_options = {
+    isNeovim = true,
+    iskeyword = '@,48-57,_,192-255,-#',
+    vimruntime = '',
+    runtimepath = '',
+    diagnostic = { enable = true },
+    indexes = {
+      runtimepath = true,
+      gap = 100,
+      count = 3,
+      projectRootPatterns = { 'runtime', 'nvim', '.git', 'autoload', 'plugin' },
+    },
+    suggest = { fromVimruntime = true, fromRuntimepath = true },
+  },
+})
+
+-- enable the LSPs
 vim.lsp.enable("awk_ls")
-vim.lsp.enable("basedpyright")
 vim.lsp.enable("bashls")
 vim.lsp.enable("lua_ls")
-vim.lsp.enable("r_language_server")
-vim.lsp.enable("sqlls")
+vim.lsp.enable("basedpyright")
+vim.lsp.enable("sqls")
 vim.lsp.enable("vimls")

@@ -19,7 +19,10 @@ pipx install basedpyright
 R -e 'install.packages("languageserver")'
 
 # SQL
-sudo npm install -g sql-language-server
+yay -S sqls
 
 # Vimscript
 sudo npm install -g vim-language-server
+
+# YAML
+sudo pacman -S yaml-language-server
