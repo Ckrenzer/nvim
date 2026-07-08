@@ -1,7 +1,8 @@
 # you'll have to ensure that the language servers
 # are installed for the LSPs to work.
 #
-# see `:help lspconfig-all` for the full supported list
+# see the neovim/nvim-lspconfig repo for the full supported list:
+# https://github.com/neovim/nvim-lspconfig/tree/master/lsp
 
 # AWK
 sudo npm install -g awk-language-server
