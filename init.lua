@@ -12,7 +12,6 @@ Plug("L3MON4D3/LuaSnip")
 
 -- R
 Plug("R-nvim/R.nvim")
-Plug("R-nvim/cmp-r")
 
 -- common lisp
 Plug("monkoose/parsley") -- nvlime dependency
