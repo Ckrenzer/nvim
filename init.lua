@@ -1,6 +1,9 @@
 local Plug = vim.fn["plug#"]
 vim.call("plug#begin")
 
+-- for installing tree sitter parsers
+Plug("nvim-treesitter/nvim-treesitter", { branch = "main" })
+
 -- lsp helpers
 Plug("hrsh7th/nvim-cmp")
 Plug("hrsh7th/cmp-nvim-lsp")
